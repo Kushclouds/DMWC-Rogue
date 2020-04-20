@@ -231,7 +231,7 @@ local function CombatSwordPvE()
 		end
 	end
 	-- Sprint
-	if Setting("Sprint") and Spell.Sprint:IsReady() and not Buff.Sprint:Exist(Player) and Player.Moving then
+	if Setting("Sprint") and Spell.Sprint:IsReady() and not Buff.Sprint:Exist(Player) and not Player.Combat and Player.Moving then
 		if Spell.Sprint:Cast(Player) then
 			return 
 		end
@@ -292,26 +292,32 @@ local function CombatSwordPvE()
 		end
 	end
 	-- Backstab if possible
-	if Target and Target.ValidEnemy and Spell.Backstab:IsReady() and ObjectIsBehind("player", "target") then
+	if Target and Target.ValidEnemy and not Debuff.Sap:Exist(Target) and Spell.Backstab:IsReady() and ObjectIsBehind("player", "target") then
 		if Spell.Backstab:Cast(Target) then
 			return
 		end
 	end
 		-- Eviscerate < 15%
-	if Setting("Eviscerate") and Spell.Eviscerate:IsReady() then
+	if Spell.Eviscerate:IsReady() then
 		for _,Unit in ipairs(Player:GetEnemies(5)) do
-			if GetComboPoints("player", "target") > 1 and Target and (Unit.TTD < 5 or Unit.HP < 15) and Enemy8YC < 2 and Buff.SliceAndDice:Remain(Player) > 4 then
+			if GetComboPoints("player", "target") > 1 and Target and (Unit.TTD < 7 or Unit.HP < 15) and not Debuff.Sap:Exist(Target) then
 				if Spell.Eviscerate:Cast(Target) then
 					return
 				end
 			end
 		end
 	end
+	-- Eviscerate @ 5 CP
+	if GetComboPoints("player", "target") == 5 and Spell.Eviscerate:IsReady() and Target and not Debuff.Sap:Exist(Target) then
+		if Spell.Eviscerate:Cast(Target) then
+			return
+		end
+	end
 	-- maintain SnD
-	if Setting("Slice and Dice") and Spell.SliceAndDice:IsReady() then
+	if Setting("Slice and Dice") and Spell.SliceAndDice:IsReady() and Target and Target.ValidEnemy and not Debuff.Sap:Exist(Target) then
 		for _,Unit in ipairs(Player:GetEnemies(5)) do
 			if GetComboPoints("player", "target") > 0 and Buff.SliceAndDice:Remain(Player) < 2 and Unit.TTD > 5 then
-				if Spell.SliceAndDice:Cast() then
+				if Spell.SliceAndDice:Cast(Target) then
 					return
 				end
 			end
@@ -334,7 +340,7 @@ local function CombatSwordPvE()
 		end
 	end
 		-- Autoattack everything in range
-    if Setting("Auto Attack") and Target and Target.ValidEnemy and Target.Distance <5 then
+    if Setting("Auto Attack") and Target and Target.ValidEnemy and Target.Distance <5 and not Debuff.Sap:Exist(Target) then
         StartAttack()
 	end
 	-- Stop until Swing
